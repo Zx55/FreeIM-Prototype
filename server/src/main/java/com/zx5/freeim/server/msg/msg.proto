@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+option java_package = "com.zx5.freeim.server.msg";
+option java_outer_classname = "Message";
+
+enum MsgType {
+    MSG_SHAKE = 0;                          // 握手
+    MSG_HEARTBEAT = 1;                      // 心跳
+    MSG_KICK_OUT = 2;                       // 多设备下线
+    MSG_P2P = 3;                            // 单聊
+    MSG_P2G = 4;                            // 群聊
+    MSG_OFFLINE_PULL = 5;                   // C 端拉取离线消息
+    MSG_OFFLINE_RET = 6;                    // S 端返回离线消息
+    MSG_OFFLINE_ACK = 7;                    // C 端确认离线消息
+    MSG_CLIENT_ACK = 8;                     // C 端确认
+    MSG_SERVER_ACK = 9;                     // S 端确认
+}
+
+enum MsgContentType {
+    MSG_TEXT     = 0;                       // 文字
+    MSG_IMAGE    = 1;                       // 图片
+    MSG_AUDIO    = 2;                       // 语音
+    MSG_VIDEO    = 3;                       // 视频
+    MSG_POSITION = 4;                       // 位置
+}
+
+message Head {
+    string msgId = 1;                       // 消息 Id
+    MsgType msgType = 2;                    // 消息类型
+    MsgContentType msgContentType = 3;      // 消息内容类型
+    string senderId = 4;                    // 消息发送者 Id
+    string receiverId = 5;                  // 消息接收者 Id
+    int64 timestamp = 6;                    // 消息时间戳
+    int32 statusReport = 7;                 // 状态报告
+    string extend = 8;                      // 扩展字段，以 key/value 形式存放的 JSON
+}
+
+message Msg {
+    Head head = 1;              // 消息头
+    string body = 2;            // 消息体
+}

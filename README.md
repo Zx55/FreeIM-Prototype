@@ -1,1 +1,1 @@
-# FreeIM-Prototype-0.1
+# FreeIM-Prototype
