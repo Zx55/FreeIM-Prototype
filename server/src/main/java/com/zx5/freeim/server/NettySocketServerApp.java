@@ -9,31 +9,45 @@
 
 package com.zx5.freeim.server;
 
-import com.corundumstudio.socketio.AckCallback;
+import com.zx5.freeim.server.msg.Message;
+
 import com.corundumstudio.socketio.Configuration;
 import com.corundumstudio.socketio.SocketIOServer;
+import com.zx5.freeim.server.utils.Utils;
 
-public class NettySocketServerApp implements Runnable {
+public class NettySocketServerApp extends Thread {
+    private int port;
+
+    public NettySocketServerApp(final int port) {
+        this.port = port;
+    }
+
     @Override
     public void run() {
         var config = new Configuration();
         config.setHostname("localhost");
-        config.setPort(8080);
+        config.setPort(port);
 
         final var server = new SocketIOServer(config);
 
         server.addConnectListener(client ->
-                System.out.println("Client " + client.getSessionId() + "connected."));
+                System.out.println("Client " + client.getSessionId() + " connected."));
 
-        server.addEventListener("test-chat", String.class, (client, data, ackSender) -> {
-            System.out.println("data: " + data);
-
-            client.sendEvent("test-chat-ack", new AckCallback<>(String.class) {
-                @Override
-                public void onSuccess(String result) {
-                    System.out.println("ack from client " + client.getSessionId() + ", data: " + result);
+        server.addEventListener("sendMsg", byte[].class, (client, data, ackSender) -> {
+            var msg = Message.Msg.parseFrom(data);
+            System.out.println("receive msg " + msg.getHead().getMsgId() + " from client "
+                    + client.getSessionId());
+            
+            switch (msg.getHead().getMsgType()) {
+                case MSG_P2P:
+                case MSG_P2G: {
+                    ackSender.sendAckData(Utils.makeAckMsg().toByteArray());
+                    break;
                 }
-            });
+
+                default:
+                    System.out.println("not supported");
+            }
         });
 
         server.start();
@@ -46,6 +60,6 @@ public class NettySocketServerApp implements Runnable {
     }
 
     public static void main(String[] args) {
-        new Thread(new NettySocketServerApp()).start();
+        new NettySocketServerApp(8080).start();
     }
 }
