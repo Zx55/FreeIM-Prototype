@@ -4,16 +4,27 @@
   "description": "Client for FreeIM-Prototype",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "cli": "cross-env TS_NODE_PROJECT=config/tsconfig.json ts-node ./src/client-cli.ts",
+    "test": "jest --coverage --verbose --config ./config/jest.config.json"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "zx5",
+  "license": "MIT",
   "dependencies": {
-    "socket.io-client": "^2.3.0",
+    "socket.io-client": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/html-webpack-plugin": "^3.2.2",
+    "@types/jest": "^25.1.3",
+    "@types/node": "^13.7.6",
+    "@types/socket.io-client": "^1.4.32",
+    "cross-env": "^7.0.0",
+    "jest": "^25.1.0",
+    "ts-jest": "^25.2.1",
     "ts-node": "^8.6.2",
     "typescript": "^3.8.2"
   },
-  "devDependencies": {
-    "@types/socket.io-client": "^1.4.32"
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/Zx55/FreeIM-Prototype.git"
   }
 }
