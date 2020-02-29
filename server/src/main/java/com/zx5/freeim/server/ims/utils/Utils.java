@@ -7,7 +7,7 @@
  * Copyright (c) Zx55. All rights reserved.
  */
 
-package com.zx5.freeim.server.utils;
+package com.zx5.freeim.server.ims.utils;
 
 import com.zx5.freeim.server.msg.Message;
 

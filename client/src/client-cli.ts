@@ -5,16 +5,24 @@ import {
     IHead,
     makeEncodedMsg,
     decodeMsg,
+    makeEncodedHeartBeatMsg
 } from './msg';
 
 const main = () => {
-    const socket = io('http://localhost:8080', {
+    const socket = io('http://localhost:8090/im-service', {
         reconnectionAttempts: 5,
     });
 
     socket.on('connect', () => {
         console.log('socket connected');
-        socket.on('disconnect', () => console.log('socket disconnect'));
+        const interval = setInterval(() => {
+            socket.emit("heartbeat", makeEncodedHeartBeatMsg(), () => console.log("beat"));
+        }, 15000);
+
+        socket.on('disconnect', () => {
+            console.log('socket disconnect');
+            clearInterval(interval);
+        });
     });
     socket.on('connect_timeout', () => console.log('connect timeout'));
     socket.on('connect_error', () => console.log('socket error'));
