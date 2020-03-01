@@ -29,7 +29,10 @@ public class SocketServerApplication {
         var config = new Configuration();
         config.setHostname(host);
         config.setPort(port);
-        return new SocketIOServer(config);
+
+        var server = new SocketIOServer(config);
+        server.addNamespace("/im-service");
+        return server;
     }
 
     public static void main(String[] args) {

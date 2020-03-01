@@ -48,17 +48,3 @@ export const makeEncodedMsg = (msg: IMsg) => {
 export const decodeMsg = (data: Uint8Array) => {
     return freeIMMsgProtoBuf.freeIMClient.Msg.decode(data);
 };
-
-export const makeEncodedHeartBeatMsg = () => {
-    const headData: IHead = {
-        msgId: "00000000",
-        msgType: MsgType.MSG_HEARTBEAT,
-        msgContentType: MsgContentType.MSG_TEXT,
-        senderId: "987654321",
-        receiverId: "00000000",
-        timestamp: 77989,
-        statusReport: 1,
-    };
-
-    return makeEncodedMsg(makeMsg({ head: headData, body: "" }));
-}
