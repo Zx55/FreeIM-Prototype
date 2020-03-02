@@ -12,15 +12,19 @@ package com.zx5.freeim.server.handler.utils;
 import com.zx5.freeim.server.msg.Message;
 
 public class Utils {
+    public static Message.Head.Builder makeDefaultHead() {
+        return Message.Head.getDefaultInstance().toBuilder();
+    }
+
+    public static Message.Msg.Builder makeDefaultMsg() {
+        return Message.Msg.getDefaultInstance().toBuilder();
+    }
+
     public static Message.Msg makeAckMsg() {
-        var head = Message.Head
-                .getDefaultInstance()
-                .toBuilder()
+        var head = makeDefaultHead()
                 .setMsgType(Message.MsgType.MSG_SERVER_ACK)
                 .build();
-        return Message.Msg
-                .getDefaultInstance()
-                .toBuilder()
+        return makeDefaultMsg()
                 .setHead(head)
                 .build();
     }

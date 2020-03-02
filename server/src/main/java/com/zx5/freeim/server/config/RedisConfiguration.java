@@ -41,32 +41,31 @@ public class RedisConfiguration {
         template.afterPropertiesSet();
         return template;
     }
-}
 
-class FastJsonRedisSerializer implements RedisSerializer<OnlineUser> {
-    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
-    private static final Logger logger = LoggerFactory.getLogger(RedisConfiguration.class);
+    private static class FastJsonRedisSerializer implements RedisSerializer<OnlineUser> {
+        public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+        private static final Logger logger = LoggerFactory.getLogger(RedisConfiguration.class);
 
-    static {
-        ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
-    }
-
-    @Override
-    public byte[] serialize(OnlineUser onlineUser) throws SerializationException {
-        if (onlineUser == null) {
-            return new byte[0];
+        static {
+            ParserConfig.getGlobalInstance().setAutoTypeSupport(true);
         }
 
-        return JSON.toJSONString(onlineUser).getBytes(DEFAULT_CHARSET);
-    }
+        @Override
+        public byte[] serialize(OnlineUser onlineUser) throws SerializationException {
+            if (onlineUser == null) {
+                return new byte[0];
+            }
 
-    @Override
-    public OnlineUser deserialize(byte[] bytes) throws SerializationException {
-        if (bytes == null || bytes.length < 1) {
-            return null;
+            return JSON.toJSONString(onlineUser).getBytes(DEFAULT_CHARSET);
         }
 
-        return JSON.parseObject(new String(bytes, DEFAULT_CHARSET), OnlineUser.class);
+        @Override
+        public OnlineUser deserialize(byte[] bytes) throws SerializationException {
+            if (bytes == null || bytes.length < 1) {
+                return null;
+            }
+
+            return JSON.parseObject(new String(bytes, DEFAULT_CHARSET), OnlineUser.class);
+        }
     }
 }
-

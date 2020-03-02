@@ -9,27 +9,33 @@
 
 package com.zx5.freeim.server.handler;
 
-import com.corundumstudio.socketio.listener.DataListener;
-import com.zx5.freeim.server.model.OnlineUser;
+import com.zx5.freeim.server.dao.OfflineMsgDao;
+import com.zx5.freeim.server.dao.OnlineUserDao;
+import com.zx5.freeim.server.handler.utils.Utils;
+import com.zx5.freeim.server.msg.Message;
 
+import com.corundumstudio.socketio.listener.DataListener;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ConnectHandler {
     private static final Logger logger = LoggerFactory.getLogger(MsgHandler.class);
 
-    private RedisTemplate<String, OnlineUser> redisTemplate;
+    private OnlineUserDao onlineUserDao;
+
+    private OfflineMsgDao offlineMsgDao;
 
     @Autowired
-    public ConnectHandler(SocketIOServer server, RedisTemplate<String, OnlineUser> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public ConnectHandler(SocketIOServer server, OnlineUserDao onlineUserDao, OfflineMsgDao offlineMsgDao) {
+        this.onlineUserDao = onlineUserDao;
+        this.offlineMsgDao = offlineMsgDao;
+
         var namespace = server.getNamespace("/im-service");
         namespace.addConnectListener(onConnect());
         namespace.addEventListener("close", Void.class, onClose());
@@ -42,13 +48,31 @@ public class ConnectHandler {
             var userId = handshake.getUrlParams().get("userId").get(0);
             var token = handshake.getUrlParams().get("token").get(0);
 
-            var mappedUser = redisTemplate.opsForValue().get(userId);
+            var mappedUser = onlineUserDao.getUserById(userId);
             if (mappedUser != null && mappedUser.getToken().equals(token)) {
-                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, client.getSessionId()));
+                onlineUserDao.updateSessionId(userId, token, client.getSessionId());
                 logger.info("Client[{}] connected from {}", client.getSessionId(),
                         handshake.getAddress().getHostString());
+
+                // push offline message
+                offlineMsgDao.getOfflineMsgById(userId).forEach(msg -> {
+                    var msgBytes = Utils.makeDefaultMsg()
+                            .setHead(Utils.makeDefaultHead()
+                                    .setMsgId(msg.getId())
+                                    .setSenderId(msg.getSender())
+                                    .setReceiverId(userId)
+                                    .setMsgType(Message.MsgType.MSG_P2P)
+                                    .setMsgContentType(msg.getType())
+                                    .setTimestamp(msg.getTimestamp())
+                                    .build())
+                            .setBody(msg.getContent())
+                            .build()
+                            .toByteArray();
+                    client.sendEvent("receiveMsg", msgBytes);
+                });
+                offlineMsgDao.removeOfflineMsgById(userId);
             } else {
-                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, client.getSessionId()));
+                // onlineUserDao.updateSessionId(userId, token, client.getSessionId());
                 logger.info("Client[{}] userId and token mismatch", client.getSessionId());
                 client.sendEvent("bad-token");
                 client.disconnect();

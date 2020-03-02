@@ -71,7 +71,7 @@ const main = async () => {
         }
 
         closeReader();
-        socket.emit(user.userId + ' close');
+        socket.emit('close');
     })
 
     socket.on('bad-token', () => {

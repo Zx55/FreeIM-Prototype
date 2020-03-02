@@ -9,17 +9,18 @@
 
 package com.zx5.freeim.server.handler;
 
-import com.corundumstudio.socketio.SocketIONamespace;
+import com.zx5.freeim.server.dao.OfflineMsgDao;
+import com.zx5.freeim.server.dao.OnlineUserDao;
 import com.zx5.freeim.server.handler.utils.Utils;
-import com.zx5.freeim.server.model.OnlineUser;
+import com.zx5.freeim.server.model.OfflineMsg;
 import com.zx5.freeim.server.msg.Message;
 
+import com.corundumstudio.socketio.SocketIONamespace;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.DataListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,38 +29,47 @@ public class MsgHandler {
 
     private SocketIONamespace namespace;
 
-    private RedisTemplate<String, OnlineUser> redisTemplate;
+    private OnlineUserDao onlineUserDao;
+
+    private OfflineMsgDao offlineMsgDao;
 
     @Autowired
-    public MsgHandler(SocketIOServer server, RedisTemplate<String, OnlineUser> redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public MsgHandler(SocketIOServer server, OnlineUserDao onlineUserDao, OfflineMsgDao offlineMsgDao) {
+        this.onlineUserDao = onlineUserDao;
+        this.offlineMsgDao = offlineMsgDao;
         this.namespace = server.getNamespace("/im-service");
+
         namespace.addEventListener("sendMsg", byte[].class, onSendMsg());
     }
 
     private DataListener<byte[]> onSendMsg() {
         return (client, data, ackSender) -> {
             var msg = Message.Msg.parseFrom(data);
-            logger.info("Client[{}] send message[{}]", client.getSessionId(), msg.getHead().getMsgId());
+            var header = msg.getHead();
+            logger.info("Client[{}] send message[{}]", client.getSessionId(), header.getMsgId());
 
-            switch (msg.getHead().getMsgType()) {
+            switch (header.getMsgType()) {
                 case MSG_P2P:
                 case MSG_P2G: {
                     ackSender.sendAckData(Utils.makeAckMsg().toByteArray());
 
-                    var mappedUser = redisTemplate.opsForValue().get(msg.getHead().getReceiverId());
+                    var receiverId = header.getReceiverId();
+                    var mappedUser = onlineUserDao.getUserById(receiverId);
                     if (mappedUser != null) {
                         var receiver = this.namespace.getClient(mappedUser.getSessionId());
                         receiver.sendEvent("receiveMsg", data);
-                        logger.info("send to User[{}] - session[{}]", msg.getHead().getReceiverId(), receiver.getSessionId());
+                        logger.info("send to User[{}] - session[{}]", receiverId, receiver.getSessionId());
                     } else {
+                        var offlineMsg = new OfflineMsg.Msg(header.getMsgId(), header.getSenderId(),
+                                header.getMsgContentType(), header.getTimestamp(), msg.getBody());
+                        offlineMsgDao.addOfflineMsg(receiverId, offlineMsg);
                         logger.info("User[{}] offline", msg.getHead().getReceiverId());
                     }
                     break;
                 }
 
                 default:
-                    logger.error("Client[{}] send unsupported message[{}]", client.getSessionId(), msg.getHead().getMsgId());
+                    logger.error("Client[{}] send unsupported message[{}]", client.getSessionId(), header.getMsgId());
             }
         };
     }
