@@ -31,10 +31,10 @@ const main = async () => {
     });
 
     socket.on('connect', async () => {
-        log.info('socket connected');
+        log.info(user.userId + ' connected');
 
         socket.on('disconnect', () => {
-            log.info('socket disconnect');
+            log.info(user.userId + ' disconnect');
         });
 
         socket.on('receiveMsg', (encodedReceivedMsg: Uint8Array) => {
@@ -42,9 +42,13 @@ const main = async () => {
             process.stdout.write('- ' + decodeMsg(encodedReceivedMsg).body + '\n> ');
         });
 
-        while (lineBuf !== "quit") {
+        while (true) {
             process.stdout.write('> ');
             lineBuf = await readLine();
+
+            if (lineBuf === "quit") {
+                break;
+            }
 
             const headData: IHead = {
                 msgId: msgCounter.toString(),
@@ -58,23 +62,23 @@ const main = async () => {
             const encodedSentMsg = makeEncodedMsg({ head: headData, body: lineBuf });
             socket.emit('sendMsg', encodedSentMsg, (encodedAckMsg: Uint8Array) => {
                 if (decodeMsg(encodedAckMsg).head.msgType !== MsgType.MSG_SERVER_ACK) {
-                    log.error("not ack");
+                    log.error(user.userId + " not ack");
                 } else {
                     msgCounter += 1;
-                    log.info("ack");
+                    log.info(user.userId + " ack");
                 }
             });
         }
 
         closeReader();
-        socket.emit('close');
+        socket.emit(user.userId + ' close');
     })
 
     socket.on('bad-token', () => {
-        log.error('bad token');
+        log.error(user.userId + ' bad token');
     });
-    socket.on('connect_timeout', () => log.error('connect timeout'));
-    socket.on('connect_error', () => log.error('socket error'));
+    socket.on('connect_timeout', () => log.error(user.userId + ' connect timeout'));
+    socket.on('connect_error', () => log.error(user.userId + ' socket error'));
 };
 
 main();
