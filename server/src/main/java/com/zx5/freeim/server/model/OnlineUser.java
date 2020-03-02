@@ -12,6 +12,7 @@ package com.zx5.freeim.server.model;
 import org.springframework.data.annotation.Id;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 public class OnlineUser implements Serializable {
     @Id
@@ -19,12 +20,12 @@ public class OnlineUser implements Serializable {
 
     private String token;
 
-    private String sessionId;
+    private UUID sessionId;
 
-    public OnlineUser(String userId, String token, String uuid) {
+    public OnlineUser(String userId, String token, UUID sessionId) {
         setUserId(userId);
         setToken(token);
-        setSessionId(uuid);
+        setSessionId(sessionId);
     }
 
     public String getUserId() {
@@ -43,11 +44,11 @@ public class OnlineUser implements Serializable {
         this.token = token;
     }
 
-    public String getSessionId() {
+    public UUID getSessionId() {
         return sessionId;
     }
 
-    public void setSessionId(String sessionId) {
+    public void setSessionId(UUID sessionId) {
         this.sessionId = sessionId;
     }
 

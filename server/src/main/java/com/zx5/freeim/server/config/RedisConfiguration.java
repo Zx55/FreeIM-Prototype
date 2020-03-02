@@ -57,12 +57,7 @@ class FastJsonRedisSerializer implements RedisSerializer<OnlineUser> {
             return new byte[0];
         }
 
-        logger.info("serialize - id: [{}], token: [{}], session: [{}]", onlineUser.getUserId(), onlineUser.getToken(), onlineUser.getSessionId());
-        var bytes = JSON.toJSONString(onlineUser).getBytes(DEFAULT_CHARSET);
-        var innerParseResult = JSON.parseObject(new String(bytes, DEFAULT_CHARSET), OnlineUser.class);
-        logger.info("inner deserialize - id: [{}], token: [{}], session: [{}]", innerParseResult.getUserId(), innerParseResult.getToken(), innerParseResult.getSessionId());
-
-        return bytes;
+        return JSON.toJSONString(onlineUser).getBytes(DEFAULT_CHARSET);
     }
 
     @Override
@@ -71,9 +66,7 @@ class FastJsonRedisSerializer implements RedisSerializer<OnlineUser> {
             return null;
         }
 
-        var obj = JSON.parseObject(new String(bytes, DEFAULT_CHARSET), OnlineUser.class);
-        logger.info("deserialize - id: [{}], token: [{}], session: [{}]", obj.getUserId(), obj.getToken(), obj.getSessionId());
-        return obj;
+        return JSON.parseObject(new String(bytes, DEFAULT_CHARSET), OnlineUser.class);
     }
 }
 

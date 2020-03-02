@@ -44,12 +44,11 @@ public class ConnectHandler {
 
             var mappedUser = redisTemplate.opsForValue().get(userId);
             if (mappedUser != null && mappedUser.getToken().equals(token)) {
-                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, "helloworld"));
-                redisTemplate.opsForValue().get(userId);
+                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, client.getSessionId()));
                 logger.info("Client[{}] connected from {}", client.getSessionId(),
                         handshake.getAddress().getHostString());
             } else {
-                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, client.getSessionId().toString()));
+                redisTemplate.opsForValue().set(userId, new OnlineUser(userId, token, client.getSessionId()));
                 logger.info("Client[{}] userId and token mismatch", client.getSessionId());
                 client.sendEvent("bad-token");
                 client.disconnect();
