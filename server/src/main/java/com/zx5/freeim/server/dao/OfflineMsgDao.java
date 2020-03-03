@@ -30,7 +30,7 @@ public class OfflineMsgDao {
     }
 
     public List<OfflineMsg.Msg> getOfflineMsgById(String userId) {
-        var result = mongoTemplate.findById(userId, OfflineMsg.class, "offline_msg");
+        var result = mongoTemplate.findOne(new Query(Criteria.where("user_id").is(userId)), OfflineMsg.class, "offline_msg");
 
         if (result == null) {
             return new ArrayList<>();
@@ -40,20 +40,21 @@ public class OfflineMsgDao {
     }
 
     public void removeOfflineMsgById(String userId) {
-        mongoTemplate.remove(new Query(Criteria.where("_id").is(userId)));
+        mongoTemplate.findAndRemove(new Query(Criteria.where("user_id").is(userId)), OfflineMsg.class, "offline_msg");
     }
 
     public void addOfflineMsg(String userId, OfflineMsg.Msg msg) {
-        var result = mongoTemplate.findById(userId, OfflineMsg.class, "offline_msg");
+        var result = mongoTemplate.findOne(new Query(Criteria.where("user_id").is(userId)), OfflineMsg.class, "offline_msg");
 
-        List<OfflineMsg.Msg> msg_list;
         if (result == null) {
-            msg_list = new ArrayList<>();
+            List<OfflineMsg.Msg> msg_list = new ArrayList<>();
+            msg_list.add(msg);
+            mongoTemplate.save(new OfflineMsg(userId, msg_list));
         } else {
-            msg_list = result.getMsgList();
+            var msg_list = result.getMsgList();
+            msg_list.add(msg);
+            result.setMsgList(msg_list);
+            mongoTemplate.findAndReplace(new Query(Criteria.where("user_id").is(userId)), result, "offline_msg");
         }
-
-        msg_list.add(msg);
-        mongoTemplate.save(new OfflineMsg(userId, msg_list));
     }
 }

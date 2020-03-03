@@ -58,7 +58,7 @@ public class ConnectHandler {
                 offlineMsgDao.getOfflineMsgById(userId).forEach(msg -> {
                     var msgBytes = Utils.makeDefaultMsg()
                             .setHead(Utils.makeDefaultHead()
-                                    .setMsgId(msg.getId())
+                                    .setMsgId(msg.getMsgId())
                                     .setSenderId(msg.getSender())
                                     .setReceiverId(userId)
                                     .setMsgType(Message.MsgType.MSG_P2P)
@@ -81,15 +81,10 @@ public class ConnectHandler {
     }
 
     private DataListener<Void> onClose() {
-        return (client, data, ackSender) -> {
-            client.disconnect();
-        };
+        return (client, data, ackSender) -> client.disconnect();
     }
 
     private DisconnectListener onDisconnect() {
-        return client -> {
-            // redisTemplate.delete(client.getHandshakeData().getUrlParams().get("userId").get(0));
-            logger.info("Client[{}] disconnect.", client.getSessionId());
-        };
+        return client -> logger.info("Client[{}] disconnect.", client.getSessionId());
     }
 }

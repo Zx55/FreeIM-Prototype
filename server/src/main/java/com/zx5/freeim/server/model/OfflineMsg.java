@@ -11,8 +11,6 @@ package com.zx5.freeim.server.model;
 
 import com.zx5.freeim.server.msg.Message;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -20,7 +18,7 @@ import java.util.List;
 
 @Document(collection = "offline_msg")
 public class OfflineMsg {
-    @Id
+    @Field("user_id")
     private String userId;
 
     @Field("msg_list")
@@ -48,8 +46,8 @@ public class OfflineMsg {
     }
 
     public static class Msg {
-        @Id
-        private String id;
+        @Field("msg_id")
+        private String msgId;
 
         @Field("sender")
         private String sender;
@@ -63,20 +61,20 @@ public class OfflineMsg {
         @Field("content")
         private String content;
 
-        public Msg(String id, String sender, Message.MsgContentType type, long timestamp, String content) {
-            setId(id);
+        public Msg(String msgId, String sender, Message.MsgContentType type, long timestamp, String content) {
+            setMsgId(msgId);
             setSender(sender);
             setType(type);
             setTimestamp(timestamp);
             setContent(content);
         }
 
-        public String getId() {
-            return id;
+        public String getMsgId() {
+            return msgId;
         }
 
-        public void setId(String id) {
-            this.id = id;
+        public void setMsgId(String msgId) {
+            this.msgId = msgId;
         }
 
         public String getSender() {
